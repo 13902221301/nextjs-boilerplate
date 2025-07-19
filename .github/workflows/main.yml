@@ -1,38 +1,42 @@
-name: Build and Deploy
+name: Build and Deploy NotionSite
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:    # 允许手动触发
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. 拉取仓库代码
-      - name: Checkout
+      # 步骤1：拉取代码 (核心基础)
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. 设置 Node.js 环境（必选！）
-      - name: Set up Node.js
+      # 步骤2：设置Node环境（解决日志中的"Set up Node.js"步骤）
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18  # NotionNext 要求 Node 16+
+          node-version: 18.x   # 必须指定版本
           cache: 'npm'
 
-      # 3. 安装依赖（截图右侧推荐模块）
+      # 步骤3：安装依赖（解决"Install dependencies"步骤）
       - name: Install dependencies
         run: npm install
 
-      # 4. 构建静态网站（核心步骤）
-      - name: Build
+      # 步骤4：项目构建（解决"Build"步骤）
+      - name: Build project
         run: npm run build
         env:
-          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}       # 从仓库Secrets读取
+          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
           NOTION_ACCESS_TOKEN: ${{ secrets.NOTION_ACCESS_TOKEN }}
 
-      # 5. 部署到 GitHub Pages（自动发布）
-      - name: Deploy
+      # 步骤5：部署修复方案（关键！解决"not found deploy key"错误）
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITH_TOKEN }}   # 自动生成，无需修改
-          publish_dir: ./out                         # NotionNext默认输出目录
+          # 令牌修复（原错误原因）
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # GITHUB需全大写！
+          # 发布目录
+          publish_dir: ./out
+          # 强制清理旧文件（防缓存冲突）
+          force_orphan: true
