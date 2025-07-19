@@ -1,0 +1,38 @@
+name: Build and Deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 拉取仓库代码
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 2. 设置 Node.js 环境（必选！）
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18  # NotionNext 要求 Node 16+
+          cache: 'npm'
+
+      # 3. 安装依赖（截图右侧推荐模块）
+      - name: Install dependencies
+        run: npm install
+
+      # 4. 构建静态网站（核心步骤）
+      - name: Build
+        run: npm run build
+        env:
+          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}       # 从仓库Secrets读取
+          NOTION_ACCESS_TOKEN: ${{ secrets.NOTION_ACCESS_TOKEN }}
+
+      # 5. 部署到 GitHub Pages（自动发布）
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITH_TOKEN }}   # 自动生成，无需修改
+          publish_dir: ./out                         # NotionNext默认输出目录
